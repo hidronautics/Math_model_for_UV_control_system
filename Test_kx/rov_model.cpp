@@ -6,10 +6,10 @@ ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
     k_gamma = 0.3;
     m = 100;
     delta_m = 2;
-    cv1[0] = 109; cv1[1] = 950; cv1[2] = 633;
-    cv2[0] = 10.9; cv2[1] = 114; cv2[2] = 76;
-    cw1[0] = 228.6; cw1[1] = 366; cw1[2] = 366; // kak v rabote Egorova
-    cw2[0] = 2.29; cw2[1] = 36.6; cw2[2] = 36.6;
+    cv1[1] = 109; cv1[2] = 950; cv1[3] = 633;
+    cv2[1] = 10.9; cv2[2] = 114; cv2[3] = 76;
+    cw1[1] = 228.6; cw1[2] = 366; cw1[3] = 366; // kak v rabote Egorova
+    cw2[1] = 2.29; cw2[2] = 36.6; cw2[3] = 36.6;
     Vt[1] = 1;Vt[2] = 1; Vt[3] = 1; Vt[4] = 0; Vt[5] = 0; Vt[6] = 0;
     lambda[1][1] = 50; lambda[2][2] = 101; lambda[3][3] = 101;
     lambda[4][4] = 50; lambda[5][5] = 50; lambda[6][6] = 50;
@@ -138,23 +138,25 @@ void ROV_Model::model(const float Umvl,const float Umnl,const float Umvp,const f
     };
 
     Fdx = Ppnp_x + Ppnl_x + Pznp_x + Pznl_x + Ppvp_x + Ppvl_x + Pzvl_x + Pzvp_x; // вектор сил и моментов, создаваемых движительным комплексом
-    Fgx = -cv1[0] * a[1] * fabs(a[1]) - cv2[0] * a[1]; //произведение D1*Vx
+    Fgx = -cv1[1] * a[1] * fabs(a[1]) - cv2[1] * a[1]; //произведение D1*Vx
     FloatageX = -sin(a[6]) * (G - Farx[1][3]);
     Fcx = C[1][1]*a[1] + C[1][2]*a[2]+C[1][3]*a[3]+C[1][4]*da[4]+C[1][5]*da[5] + C[1][6]*da[6];
     //FloatageX = 0; //обнуление остаточной плавучести
     da[1] = (1/(m + lambda[1][1])) * (Fdx - Fgx -Fcx - FloatageX+Vt[1]); //vx'
 
-    Fdy = 0;
-    Fgy = -cv1[1] * a[2] * fabs(a[2]) - cv2[1] * a[2];
-    FloatageY = cos(a[6]) * cos(a[5]) * delta_f;
+    Fdy = Ppnp_y + Ppnl_y + Pznp_y + Pznl_y + Ppvp_y + Ppvl_y + Pzvl_y + Pzvp_y; // вектор сил и моментов, создаваемых движительным комплексом
+    Fgy = -cv1[2] * a[2] * fabs(a[2]) - cv2[2] * a[2]; //произведение D1*Vy
+    FloatageY = cos(a[6]) * sin(a[5]) * (G - Farx[1][3]);
+    Fcy = C[2][1]*a[1] + C[2][2]*a[2]+C[2][3]*a[3]+C[2][4]*da[4]+C[2][5]*da[5] + C[2][6]*da[6];
     //FloatageY = 0; //обнуление остаточной плавучести
-    da[2] = (1/(m + lambda[2][2])) * (Fgy + Fdy + FloatageY); //vy'
+    da[2] = (1/(m + lambda[2][2])) * (Fdy - Fgy -Fcy - FloatageY+Vt[2]); //vy'
 
-    Fdz = 0;
-    Fgz = -cv1[2] * a[3] * fabs(a[3]) - cv2[2] * a[3];
-    FloatageZ = -cos(a[6]) * sin(a[5]) * delta_f;
+    Fdz = Ppnp_z + Ppnl_z + Pznp_z + Pznl_z + Ppvp_z + Ppvl_z + Pzvl_z + Pzvp_z; // вектор сил и моментов, создаваемых движительным комплексом
+    Fgz = -cv1[3] * a[3] * fabs(a[3]) - cv2[3] * a[3]; //произведение D1*Vz
+    FloatageZ = cos(a[6]) * cos(a[5]) * (G - Farx[1][3]);
+    Fcz = C[3][1]*a[1] + C[3][2]*a[2]+C[3][3]*a[3]+C[3][4]*da[4]+C[3][5]*da[5] + C[3][6]*da[6];
     //FloatageZ = 0; //обнуление остаточной плавучести
-    da[3] = (1/(m + lambda[3][3])) * (Fdz + Fgz + FloatageZ); //vz'
+    da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ+Vt[3]); //vz'
 
     da[4] = -(1/cos(a[6]) * ((-a[18]) * cos(a[5]) - sin(a[5]) * a[19]));  //proizvodnaya kursa
 
