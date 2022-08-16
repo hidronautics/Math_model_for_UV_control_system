@@ -157,40 +157,45 @@ void ROV_Model::model(const float Umvl,const float Umnl,const float Umvp,const f
     Fcz = C[3][1]*a[1] + C[3][2]*a[2]+C[3][3]*a[3]+C[3][4]*da[4]+C[3][5]*da[5] + C[3][6]*da[6];
     //FloatageZ = 0; //обнуление остаточной плавучести
     da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ+Vt[3]); //vz'
+// da[4] -> производная угла крена da[5]-> производная угла дифферента da[6]-> производная дкурса,
+//следующие 3 уравнения это Кинематические уравнения для углов Эйлера-Крылова
+//описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz , в вектор
+//угловых скоростей  по курсу, дифференту и крену соответственно.
 
-    da[4] = -(1/cos(a[6]) * ((-a[18]) * cos(a[5]) - sin(a[5]) * a[19]));  //proizvodnaya kursa
+    da[4] = a[17] + (1/cos(a[5]) * ((a[18]) * sin(a[4]) * sin(a[5])  - sin(a[5]) * cos(a[4]) * a[19]));  //proizvodnaya krena
 
-    da[5] = a[17] - tan(a[6]) * ((-a[18]) * cos(a[5]) - sin(a[5]) * a[19]);  //proizvodnaya krena
+    da[5] = ((a[18]) * cos(a[4]) - sin(a[4]) * a[19]);  //proizvodnaya differenta
 
-    da[6] = a[19] * cos(a[5]) + sin(a[5]) * (-a[18]); //proizvodnaya differenta
+    da[6] = (1/cos(a[5])) * (a[18] * sin(a[4]) + cos(a[4]) * (a[18])); //proizvodnaya kursa
 
-    X[17][0]=da[7] = (1/Td) * (kd * (double)Umvp - Pmvp);  // маршевый верхний правый
+ //пока не шарю что это {
+ //   X[17][0]=da[7] = (1/Td) * (kd * (double)Umvp - Pmvp);  // маршевый верхний правый
 
-    da[8] = (1/Td) * (kd * (double)Umvl - Pmvl); //маршевый верхний левый
+  //  da[8] = (1/Td) * (kd * (double)Umvl - Pmvl); //маршевый верхний левый
 
-    da[9] = (1/Td) * (kd * (double)Umnp - Pmnp);  // маршевый нижний правый
+  //  da[9] = (1/Td) * (kd * (double)Umnp - Pmnp);  // маршевый нижний правый
 
-    da[10] = (1/Td) * (kd * (double)Umnl - Pmnl);  //маршевый нижний левый
+  //  da[10] = (1/Td) * (kd * (double)Umnl - Pmnl);  //маршевый нижний левый
 
-    da[11] = 0;
+ //   da[11] = 0;
 
-    da[12] = 0;
+   // da[12] = 0;
 
-    da[13] = 0;
+  //  da[13] = 0; }
 
     double alfa[4][4]; //матрица перевода из связанной СК в глобальную СК
     a[4] = -a[4];
-    alfa[1][1] = cos(a[4])*cos(a[6]);
-    alfa[2][1] = sin(a[6]);
-    alfa[3][1] = -sin(a[4])*cos(a[6]);
-    alfa[1][2] = sin(a[5])*sin(a[4])-cos(a[5])*cos(a[4])*sin(a[6]);
-    alfa[2][2] = cos(a[5])*cos(a[6]);
-    alfa[3][2] = sin(a[5])*cos(a[4])+cos(a[5])*sin(a[4])*sin(a[6]);
-    alfa[1][3] = cos(a[5])*sin(a[4])+sin(a[5])*cos(a[4])*sin(a[6]);
-    alfa[2][3] = -sin(a[5])*cos(a[6]);
-    alfa[3][3] = cos(a[5])*cos(a[4])-sin(a[4])*sin(a[5])*sin(a[6]);
+    alfa[1][1] = cos(a[5])*cos(a[6]);
+    alfa[2][1] = sin(a[6])*cos(a[5]);
+    alfa[3][1] = -sin(a[5]);
+    alfa[1][2] = cos(a[6])*sin(a[5])*sin(a[4])-cos(a[4])*sin(a[6]);
+    alfa[2][2] = cos(a[6])*cos(a[4])+sin(a[4])*sin(a[5])*sin(a[6]);
+    alfa[3][2] = sin(a[4])*cos(a[5]);
+    alfa[1][3] = sin(a[6])*sin(a[4])+cos(a[6])*cos(a[4])*sin(a[5]);
+    alfa[2][3] = sin(a[5])*sin(a[6])*cos(a[4])-cos(a[6])*sin(a[4]);
+    alfa[3][3] = cos(a[5])*cos(a[4]);
     a[4] = -a[4];
-
+//кажется тут нужно думать со смещением, вся модель была сделана максимум на 7 движетелей, поэтому a[14] накладывается друг на друга, если что завтра этим займусь
     da[14] = alfa[1][1] * a[1] + alfa[1][2] * a[2] + alfa[1][3] * a[3];
     //dx_global
 
@@ -286,9 +291,10 @@ void ROV_Model::runge(const float Umvl, const float Umnl, const float Umvp, cons
     vx_local = a[1]; vy_local = a[2]; vz_local = a[3];  //lineinye skorosti SPA v svyazannyh osyah
     vx_global = da[14]; vy_global = da[15]; vz_global = da[16];  // lineinye skorosti SPA v globalnyh osyah
 
-    Psi_g = a[4] * Kc; // ugol kursa (преобразование координат)
-    Gamma_g = a[5] * Kc; // ugol krena
-    Tetta_g = a[6] * Kc; // ugol differenta
+    Gamma_g = a[4] * Kc; // ugol krena
+    Tetta_g = a[5] * Kc; // ugol differenta
+    Psi_g = a[6] * Kc; // ugol kursa (преобразование координат)
+
     W_Psi_g = da[4] * Kc; // proizvodnaya ugla kursa
     W_Gamma_g = da[5] * Kc; // proizvodnaya ugla krena
     W_Tetta_g = da[6] * Kc; // proizvodnaya ugla differenta
