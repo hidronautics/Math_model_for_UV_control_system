@@ -4,14 +4,14 @@
 
 ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
     resetModel();
-    k_gamma = 0.3;     //не использую в итоге
+    //k_gamma = 0.3;    не использую в итоге
     m = 100;
-    delta_m = 2;
+    //delta_m = 2;
     cv1[1] = 109; cv1[2] = 950; cv1[3] = 633;
     cv2[1] = 10.9; cv2[2] = 114; cv2[3] = 76;
     cw1[1] = 228.6; cw1[2] = 366; cw1[3] = 366; // kak v rabote Egorova
     cw2[1] = 2.29; cw2[2] = 36.6; cw2[3] = 36.6;
-    Vt[1] = 1;Vt[2] = 1; Vt[3] = 1; Vt[4] = 0; Vt[5] = 0; Vt[6] = 0;
+    Vt[1] = 1;Vt[2] = 1; Vt[3] = 1; Vt[4] = 0; Vt[5] = 0; Vt[6] = 0; // скорость течения
     lambda[1][1] = 50; lambda[2][2] = 101; lambda[3][3] = 101;
     lambda[4][4] = 50; lambda[5][5] = 50; lambda[6][6] = 50;
     Ta[1][1] = 0.7071; Ta[1][2] = 0.7071; Ta[1][3] = -0.7071; Ta[1][4] = -0.7071; Ta[1][5] = 0.7071; Ta[1][6] = 0.7071; Ta[1][7] = -0.7071; Ta[1][8] = -0.7071;
@@ -21,15 +21,14 @@ ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
     Ta[5][1] = -3.83; Ta[5][2] = -3.83; Ta[5][3] = 3.83; Ta[5][4] = 3.83; Ta[5][5] = 3.83; Ta[5][6] = 3.83; Ta[5][7] = -3.83; Ta[5][8] = -3.83;
     Ta[6][1] = -121.33; Ta[6][2] = 121.33; Ta[6][3] = -121.33; Ta[6][4] = 121.33; Ta[6][5] = -121.33; Ta[6][6] = 121.33; Ta[6][7] = -121.33; Ta[6][8] = 121.33;
     //матрица сил и моментов инерции (проверить вторую матрицу, пока я вбила из мат модели, но кажется там я ошиблась она же не симметрична относительно оси, что странно)
-    C[1][1] = 0; C[1][2] = (m+lambda[2][2])*da[6]; C[1][3] = -(m + lambda[3][3])*da[5]; C[1][4] = 0; C[1][5] = 0; C[1][6] = 0;
-    C[2][1] = -(m + lambda[1][1])*da[6]; C[2][2] = 0; C[2][3] = (m + lambda[3][3])*da[4]; C[2][4] = 0; C[2][5] = 0; C[2][6] = 0;
-    C[3][1] = (m + lambda[1][1])*da[5]; C[3][2] = -(m+lambda[2][2])*da[4]; C[3][3] = 0; C[3][4] = 0; C[3][5] = 0; C[3][6] = 0;
-    C[4][1] = 0; C[4][2] = 0; C[4][3] = 0; C[4][4] = 0; C[4][5] = -(J[3]+lambda[6][6])*da[6]; C[4][6] = (J[2]+lambda[5][5])*da[5];
-    C[5][1] = 0; C[5][2] = 0; C[5][3] = 0; C[5][4] = (J[3]+lambda[6][6])*da[6]; C[5][5] = 0; C[5][6] = -(J[1]+lambda[4][4])*da[4];
-    C[6][1] = 0; C[6][2] = 0; C[6][3] = 0; C[6][4] = -(J[2]+lambda[5][5])*da[5]; C[6][5] = (J[1]+lambda[4][4])*da[4]; C[6][6] = 0;
+    C[1][1] = 0; C[1][2] = (m+lambda[2][2])*a[20]; C[1][3] = -(m + lambda[3][3])*a[19]; C[1][4] = 0; C[1][5] = 0; C[1][6] = 0;
+    C[2][1] = -(m + lambda[1][1])*a[20]; C[2][2] = 0; C[2][3] = (m + lambda[3][3])*a[18]; C[2][4] = 0; C[2][5] = 0; C[2][6] = 0;
+    C[3][1] = (m + lambda[1][1])*a[19]; C[3][2] = -(m+lambda[2][2])*a[18]; C[3][3] = 0; C[3][4] = 0; C[3][5] = 0; C[3][6] = 0;
+    C[4][1] = 0; C[4][2] = 0; C[4][3] = 0; C[4][4] = 0; C[4][5] = -(J[3]+lambda[6][6])*a[20]; C[4][6] = (J[2]+lambda[5][5])*a[19];
+    C[5][1] = 0; C[5][2] = 0; C[5][3] = 0; C[5][4] = (J[3]+lambda[6][6])*a[20]; C[5][5] = 0; C[5][6] = -(J[1]+lambda[4][4])*a[18];
+    C[6][1] = 0; C[6][2] = 0; C[6][3] = 0; C[6][4] = -(J[2]+lambda[5][5])*a[19]; C[6][5] = (J[1]+lambda[4][4])*a[18]; C[6][6] = 0;
     J[1] = 4; J[2] = 19.8; J[3] = 19.8; //moment inercii apparata vdol sootvetstvuushih osei
     kd = 3; //koefficient usilenija dvizhitelei
-    h = 0.018; //metacentricheskaya vysota
     Td = 0.15; //postojannaya vremeni dvizhitelei
     //koordinaty uporov dvizhitelei otnositelno centra mass apparata
     depth_limit=100;
@@ -113,12 +112,12 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     double g = 9.81;
     G = m*g; //вес аппарата
     delta_f = delta_m * g; //плавучесть (H)
-    Farx[1][1] = 0; Farx [1][2] = 0; Farx[1][3] = -10; //коэффициент 10 написан по приколу
+    Farx[0] = 0; Farx[1] = 0; Farx[2] = -10; //коэффициент 10 написан по приколу
 
     //obnulenie verticalnoi polozhitelnoi skorosti apparata pri dostizhenii poverhnosti
     limit1 = limit2 = 0;
-    if (a[15] >= max_depth) {
-      a[15] = max_depth;
+    if (a[17] >= max_depth) {
+      a[17] = max_depth;
         if (a[3] <= 0) {
           a[3] = 0;
           limit1 = 1;
@@ -126,9 +125,9 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     };
 
     //obnulenie verticalnoi polozhitelnoi skorosti apparata pri dostizhenii dna
-    if (a[15] <= 0)
+    if (a[17] <= 0)
     {
-      a[15] = 0;
+      a[17] = 0;
         if (a[3] >= 0)
       {
           a[3] = 0;
@@ -161,11 +160,11 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
 //описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz , в вектор
 //угловых скоростей  по курсу, дифференту и крену соответственно.
 
-    da[4] = a[18] + (1/cos(a[5]) * ((a[19]) * sin(a[4]) * sin(a[5])  + sin(a[5]) * cos(a[4]) * a[20]));  //proizvodnaya krena
+    da[4] = a[18] + (1/cos(a[5]) * ((a[19]) * sin(a[4]) * sin(a[5])  + sin(a[5]) * cos(a[4]) * a[20])) + Vt[4];  //proizvodnaya krena
 
-    da[5] = ((a[19]) * cos(a[4]) - sin(a[4]) * a[20]);  //proizvodnaya differenta
+    da[5] = a[19] * cos(a[4]) - sin(a[4]) * a[20] + Vt[5];  //proizvodnaya differenta
 
-    da[6] = (1/cos(a[5])) * (a[19] * sin(a[4]) + cos(a[4]) * (a[20])); //proizvodnaya kursa
+    da[6] = (1/cos(a[5])) * (a[19] * sin(a[4]) + cos(a[4]) * (a[20])) + Vt[6]; //proizvodnaya kursa
 
  //как я поняла это для отслеживания разницы между сигналом напряжения, который мы подаем и упором двигателей,
  //(как раз был вывод X[17][0]=da[7]=...), скорее всего для подбора коэффициента kd. Из матмодели имеем
@@ -215,21 +214,21 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     Max = -hy*Faz + hz*Fay;
     //Max = 0; //obnulenie momenta ot sily Arhimeda
     Mcx = C[4][1]*a[1] + C[4][2]*a[2]+C[4][3]*a[3]+C[4][4]*a[18]+C[4][5]*a[19] + C[4][6]*a[20];
-    da[18] = (1/(J[1] + lambda[4][4])) * (Mdx - Mcx+ Mgx - Max + Wt[1]);
+    da[18] = (1/(J[1] + lambda[4][4])) * (Mdx - Mcx+ Mgx - Max + Wv[1]);
 
     Mdy = Mpnp_y + Mpnl_y + Mznp_y + Mznl_y + Mpvp_y + Mpvl_y + Mzvl_y + Mzvp_y;
     Mgy = cw1[2] * a[19] * fabs(a[19]) + cw2[2] * a[19];
     May = -Faz*hy + Fay*hz;
     //May = 0; //obnulenie momenta ot sily Arhimeda
     Mcy = C[5][1]*a[1] + C[5][2]*a[2]+C[5][3]*a[3]+C[5][4]*a[18]+C[5][5]*a[19] + C[5][6]*a[20];
-    da[19] = (1/(J[2] + lambda[5][5])) * (Mdy - Mcy + Mgy - May + Wt[2]);
+    da[19] = (1/(J[2] + lambda[5][5])) * (Mdy - Mcy + Mgy - May + Wv[2]);
 
     Mdz = Mpnp_z + Mpnl_z + Mznp_z + Mznl_z + Mpvp_z + Mpvl_z + Mzvl_z + Mzvp_z;
     Mgz = cw1[3] * a[20] * fabs(a[20]) + cw2[3] * a[20];
     Maz = -hx*Fay + hy*Fax;
     //Maz = 0; //obnulenie momenta ot sily Arhimeda
     Mcz = C[6][1]*a[1] + C[6][2]*a[2]+C[6][3]*a[3]+C[6][4]*a[18]+C[6][5]*a[19] + C[6][6]*a[20];
-    da[20] = (1/(J[3] + lambda[6][6])) * (Mdz - Mcz + Mgz - Maz + Wt[3]);
+    da[20] = (1/(J[3] + lambda[6][6])) * (Mdz - Mcz + Mgz - Maz + Wv[3]);
 
     //?????????Непонятно зачем их приравнивают?
     da[21] = a[1];
@@ -286,9 +285,9 @@ void ROV_Model::runge(const float Upnp,const float Upnl,const float Uznp,const f
     //данные в СУ ( с преобразованием координат)
 
     x_global = a[15]; //koordinata apparata v globalnoi SK
-    y_global = a[16];  //otstojanie ot dna otnositelno repernoi tochki, kotoraja na dne
+    y_global = a[16];  //koordinaty apparata v globalnoi SK (преобразование координат)
     cur_depth = max_depth - y_global;  //tekush"aya glubina SPA
-    z_global = a[17]; //koordinaty apparata v globalnoi SK (преобразование координат)
+    z_global = a[17]; //otstojanie ot dna otnositelno repernoi tochki, kotoraja na dne
     Wx = a[18] * Kc; //uglovye skorosti SPA v svyazannyh osyah v gradus/sekunda
     Wy = a[19] * Kc;
     Wz = a[20] * Kc;
