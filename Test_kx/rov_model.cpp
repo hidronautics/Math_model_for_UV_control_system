@@ -1,9 +1,10 @@
 #include "rov_model.h"
+#include <cmath>
 
 
 ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
     resetModel();
-    k_gamma = 0.3;
+    k_gamma = 0.3;     //не использую в итоге
     m = 100;
     delta_m = 2;
     cv1[1] = 109; cv1[2] = 950; cv1[3] = 633;
@@ -31,13 +32,11 @@ ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
     h = 0.018; //metacentricheskaya vysota
     Td = 0.15; //postojannaya vremeni dvizhitelei
     //koordinaty uporov dvizhitelei otnositelno centra mass apparata
-    l1=0.14;
-    l2=0.14;
     depth_limit=100;
     max_depth=100;
 }
 
-void ROV_Model::model(const float Umvl,const float Umnl,const float Umvp,const float Umnp) {
+void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const float Uznl, const float Upvp, const float Upvl, const float Uzvl, const float Uzvp) {
     int limit1, limit2;
     double G,delta_f;
 
@@ -139,49 +138,47 @@ void ROV_Model::model(const float Umvl,const float Umnl,const float Umvp,const f
 
     Fdx = Ppnp_x + Ppnl_x + Pznp_x + Pznl_x + Ppvp_x + Ppvl_x + Pzvl_x + Pzvp_x; // вектор сил и моментов, создаваемых движительным комплексом
     Fgx = -cv1[1] * a[1] * fabs(a[1]) - cv2[1] * a[1]; //произведение D1*Vx
-    FloatageX = -sin(a[6]) * (G - Farx[1][3]);
+    FloatageX = -sin(a[5]) * (G - Farx[1][3]);
     Fcx = C[1][1]*a[1] + C[1][2]*a[2]+C[1][3]*a[3]+C[1][4]*da[4]+C[1][5]*da[5] + C[1][6]*da[6];
     //FloatageX = 0; //обнуление остаточной плавучести
-    da[1] = (1/(m + lambda[1][1])) * (Fdx - Fgx -Fcx - FloatageX+Vt[1]); //vx'
+    da[1] = (1/(m + lambda[1][1])) * (Fdx - Fgx -Fcx - FloatageX + Vt[1]); //vx'
 
     Fdy = Ppnp_y + Ppnl_y + Pznp_y + Pznl_y + Ppvp_y + Ppvl_y + Pzvl_y + Pzvp_y; // вектор сил и моментов, создаваемых движительным комплексом
     Fgy = -cv1[2] * a[2] * fabs(a[2]) - cv2[2] * a[2]; //произведение D1*Vy
-    FloatageY = cos(a[6]) * sin(a[5]) * (G - Farx[1][3]);
+    FloatageY = cos(a[5]) * sin(a[4]) * (G - Farx[1][3]);
     Fcy = C[2][1]*a[1] + C[2][2]*a[2]+C[2][3]*a[3]+C[2][4]*da[4]+C[2][5]*da[5] + C[2][6]*da[6];
     //FloatageY = 0; //обнуление остаточной плавучести
-    da[2] = (1/(m + lambda[2][2])) * (Fdy - Fgy -Fcy - FloatageY+Vt[2]); //vy'
+    da[2] = (1/(m + lambda[2][2])) * (Fdy - Fgy -Fcy - FloatageY + Vt[2]); //vy'
 
     Fdz = Ppnp_z + Ppnl_z + Pznp_z + Pznl_z + Ppvp_z + Ppvl_z + Pzvl_z + Pzvp_z; // вектор сил и моментов, создаваемых движительным комплексом
     Fgz = -cv1[3] * a[3] * fabs(a[3]) - cv2[3] * a[3]; //произведение D1*Vz
-    FloatageZ = cos(a[6]) * cos(a[5]) * (G - Farx[1][3]);
+    FloatageZ = cos(a[4]) * cos(a[5]) * (G - Farx[1][3]);
     Fcz = C[3][1]*a[1] + C[3][2]*a[2]+C[3][3]*a[3]+C[3][4]*da[4]+C[3][5]*da[5] + C[3][6]*da[6];
     //FloatageZ = 0; //обнуление остаточной плавучести
-    da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ+Vt[3]); //vz'
+    da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ + Vt[3]); //vz'
 // da[4] -> производная угла крена da[5]-> производная угла дифферента da[6]-> производная дкурса,
 //следующие 3 уравнения это Кинематические уравнения для углов Эйлера-Крылова
 //описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz , в вектор
 //угловых скоростей  по курсу, дифференту и крену соответственно.
 
-    da[4] = a[17] + (1/cos(a[5]) * ((a[18]) * sin(a[4]) * sin(a[5])  - sin(a[5]) * cos(a[4]) * a[19]));  //proizvodnaya krena
+    da[4] = a[18] + (1/cos(a[5]) * ((a[19]) * sin(a[4]) * sin(a[5])  + sin(a[5]) * cos(a[4]) * a[20]));  //proizvodnaya krena
 
-    da[5] = ((a[18]) * cos(a[4]) - sin(a[4]) * a[19]);  //proizvodnaya differenta
+    da[5] = ((a[19]) * cos(a[4]) - sin(a[4]) * a[20]);  //proizvodnaya differenta
 
-    da[6] = (1/cos(a[5])) * (a[18] * sin(a[4]) + cos(a[4]) * (a[18])); //proizvodnaya kursa
+    da[6] = (1/cos(a[5])) * (a[19] * sin(a[4]) + cos(a[4]) * (a[20])); //proizvodnaya kursa
 
- //пока не шарю что это {
- //   X[17][0]=da[7] = (1/Td) * (kd * (double)Umvp - Pmvp);  // маршевый верхний правый
+ //как я поняла это для отслеживания разницы между сигналом напряжения, который мы подаем и упором двигателей,
+ //(как раз был вывод X[17][0]=da[7]=...), скорее всего для подбора коэффициента kd. Из матмодели имеем
+ //K_двi - усредненный коэффициент усиления i-го движителя; T_двi=J_i/K_v1i  – наибольшее значение постоянной времени i-го ВМА
+    da[7] = (1/Td) * (kd * (double)Upnp - Ppnp);  // передний нижний правый(1)
+    da[8] = (1/Td) * (kd * (double)Upnl - Ppnl);  // передний нижний левый(2)
+    da[9] = (1/Td) * (kd * (double)Uznp - Pznp);  // задний нижний левый(3)
+    da[10] = (1/Td) * (kd * (double)Uznl - Pznl); //задний нижний правый(4)
+    da[11] = (1/Td) * (kd * (double)Upvp - Ppvp); // передний верхний правый(5)
+    da[12] = (1/Td) * (kd * (double)Upvl - Ppvl); // передний верхний левый(6)
+    da[13] = (1/Td) * (kd * (double)Uzvl - Pzvl); //задний верхний правый(8)
+    da[14] = (1/Td) * (kd * (double)Uzvp - Pzvp); // задний верхний левый(7)
 
-  //  da[8] = (1/Td) * (kd * (double)Umvl - Pmvl); //маршевый верхний левый
-
-  //  da[9] = (1/Td) * (kd * (double)Umnp - Pmnp);  // маршевый нижний правый
-
-  //  da[10] = (1/Td) * (kd * (double)Umnl - Pmnl);  //маршевый нижний левый
-
- //   da[11] = 0;
-
-   // da[12] = 0;
-
-  //  da[13] = 0; }
 
     double alfa[4][4]; //матрица перевода из связанной СК в глобальную СК
     a[4] = -a[4];
@@ -196,41 +193,48 @@ void ROV_Model::model(const float Umvl,const float Umnl,const float Umvp,const f
     alfa[3][3] = cos(a[5])*cos(a[4]);
     a[4] = -a[4];
 //кажется тут нужно думать со смещением, вся модель была сделана максимум на 7 движетелей, поэтому a[14] накладывается друг на друга, если что завтра этим займусь
-    da[14] = alfa[1][1] * a[1] + alfa[1][2] * a[2] + alfa[1][3] * a[3];
+//P.S. сместила на единичку
+    da[15] = alfa[1][1] * a[1] + alfa[1][2] * a[2] + alfa[1][3] * a[3];
     //dx_global
 
-    da[15] = alfa[2][1] * a[1] + alfa[2][2] * a[2] + alfa[2][3] * a[3];
+    da[16] = alfa[2][1] * a[1] + alfa[2][2] * a[2] + alfa[2][3] * a[3];
     //dy_global
 
-    da[16] = alfa[3][1] * a[1] + alfa[3][2] * a[2] + alfa[3][3] * a[3];
+    da[17] = alfa[3][1] * a[1] + alfa[3][2] * a[2] + alfa[3][3] * a[3];
     //dz_global
 
+    //как я поняла нам нужно провращать вектор силы тяжести, у него координата ненулевая только по оси z,
+    //поэтому я так понимаю умножать нужно на 3 строку матрицы перехода
     double Fa = G + delta_f;
-    double Fax = sin(a[6])*Fa;
-    //float Fay = cos(a[5])*cos(a[6])*Fa;
-    double Faz = -sin(a[5])*cos(a[6])*Fa;
+    double Fax = -sin(a[5])*Fa;
+    double Fay = sin(a[4])*cos(a[5])*Fa;
+    double Faz = cos(a[5])*cos(a[4])*Fa;
 
-    Mdx = k_gamma*( -Pmvp_x - Pmnl_x + Pmnp_x + Pmvl_x );
-    Mgx = -cw1[0] * a[17] * fabs(a[17]) - cw2[0] * a[17];
-    Max = Faz*h;
+    Mdx = Mpnp_x + Mpnl_x + Mznp_x + Mznl_x + Mpvp_x + Mpvl_x + Mzvl_x + Mzvp_x;
+    Mgx = 90*(cw1[1] * a[18] * fabs(a[18]) + cw2[1] * a[18]);
+    Max = -hy*Faz + hz*Fay;
     //Max = 0; //obnulenie momenta ot sily Arhimeda
-    da[17] = (1/(J[0] + lambda[4][4])) * (Mdx + Mgx + Max);
+    Mcx = C[4][1]*a[1] + C[4][2]*a[2]+C[4][3]*a[3]+C[4][4]*a[18]+C[4][5]*a[19] + C[4][6]*a[20];
+    da[18] = (1/(J[1] + lambda[4][4])) * (Mdx - Mcx+ Mgx - Max + Wt[1]);
 
-    Mdy = l2*(-Pmvp_x + Pmvl_x + Pmnl_x - Pmnp_x);
-    Mgy = -cw1[1] * a[18] * fabs(a[18]) - cw2[1] * a[18];
-    da[18] = (1/(J[1] + lambda[5][5])) * (Mdy + Mgy);
+    Mdy = Mpnp_y + Mpnl_y + Mznp_y + Mznl_y + Mpvp_y + Mpvl_y + Mzvl_y + Mzvp_y;
+    Mgy = cw1[2] * a[19] * fabs(a[19]) + cw2[2] * a[19];
+    May = -Faz*hy + Fay*hz;
+    //May = 0; //obnulenie momenta ot sily Arhimeda
+    Mcy = C[5][1]*a[1] + C[5][2]*a[2]+C[5][3]*a[3]+C[5][4]*a[18]+C[5][5]*a[19] + C[5][6]*a[20];
+    da[19] = (1/(J[2] + lambda[5][5])) * (Mdy - Mcy + Mgy - May + Wt[2]);
 
-    Mdz = l1*(-Pmvp_x - Pmvl_x + Pmnl_x + Pmnp_x);
-    Mgz = -cw1[2] * a[19] * fabs(a[19]) - cw2[2] * a[19];
-    Maz = -h*Fax;
+    Mdz = Mpnp_z + Mpnl_z + Mznp_z + Mznl_z + Mpvp_z + Mpvl_z + Mzvl_z + Mzvp_z;
+    Mgz = cw1[3] * a[20] * fabs(a[20]) + cw2[3] * a[20];
+    Maz = -hx*Fay + hy*Fax;
     //Maz = 0; //obnulenie momenta ot sily Arhimeda
-    da[19] = (1/(J[2] + lambda[6][6])) * (Mdz + Mgz +Maz);
+    Mcz = C[6][1]*a[1] + C[6][2]*a[2]+C[6][3]*a[3]+C[6][4]*a[18]+C[6][5]*a[19] + C[6][6]*a[20];
+    da[20] = (1/(J[3] + lambda[6][6])) * (Mdz - Mcz + Mgz - Maz + Wt[3]);
 
-    da[20] = a[1];
-    da[21] = a[2];
-    da[22] = a[3];
-
-  
+    //?????????Непонятно зачем их приравнивают?
+    da[21] = a[1];
+    da[22] = a[2];
+    da[23] = a[3];
 
 }
 
@@ -239,40 +243,41 @@ void ROV_Model::resetModel(){
     for (int i=0;i<ANPA_MOD_CNT;i++) {a[i] = 0.0f; da[i]=0.0f;}
 }
 
-void ROV_Model::tick(const float Umvl,const float Umnl,
-                     const float Umvp,const float Umnp,const float Ttimer){
-    runge(Umvl,Umnl,Umvp,Umnp,Ttimer,Ttimer);
+void ROV_Model::tick(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
+                     const float Upvp, const float Upvl, const float Uzvl, const float Uzvp,const float Ttimer){
+    runge(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp,Ttimer,Ttimer);
 }
 
 ROV_Model::~ROV_Model(){
 
 }
 
-void ROV_Model::runge(const float Umvl, const float Umnl, const float Umvp, const float Umnp, const float Ttimer, const float dt) {
+void ROV_Model::runge(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
+                      const float Upvp, const float Upvl, const float Uzvl, const float Uzvp, const float Ttimer, const float dt) {
     const double Kc = 180/M_PI;
     double a1[23], y[23];
     int i;
     const double H1 = dt;
     const int n = ANPA_MOD_CNT;
-    model(Umvl,Umnl,Umvp,Umnp);
+    model(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp);
     for (i = 1; i < n; i++) {
       a1[i] = a[i];
       y[i] = da[i];
       a[i] = a1[i] + 0.5 * H1 * da[i];
     }
 
-    model(Umvl,Umnl,Umvp,Umnp);
+    model(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp);
     for (i = 1; i < n; i++)
     {
       y[i] = y[i]+ 2 * da[i];
       a[i] = a1[i] + 0.5 * H1 * da[i];
     }
-    model(Umvl,Umnl,Umvp,Umnp);
+    model(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp);
     for (i = 1; i < n; i++) {
       y[i] = y[i] + 2 * da[i];
       a[i] = a1[i] + H1 * da[i];
     }
-    model(Umvl,Umnl,Umvp,Umnp);
+    model(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp);
     for (i = 1; i < n; i++) {
       a[i] = a1[i] + (H1 / 6) * (y[i] + da[i]);
     }
