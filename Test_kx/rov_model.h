@@ -11,7 +11,7 @@ extern double X[2000][2];
 struct InitData {
     double k_gamma;
     double m;
-    double Farx[1][4];
+    double Farx[3];
     double delta_m;
     double cv1[4];
     double cv2[4];
@@ -21,10 +21,9 @@ struct InitData {
     double Ta[6][8];
     double J[3];
     double kd;
-    double h;
-    double hx;
-    double hy;
-    double hz;
+    double hx;  //metacentricheskaya vysota
+    double hy;  //metacentricheskaya vysota
+    double hz;  //metacentricheskaya vysota
     double Td;
     double depth_limit;
     double max_depth;
@@ -54,7 +53,7 @@ public:
     //константы
     double k_gamma;
     double m;
-    double Farx[2][4];
+    double Farx[3];
     double g;
     double G;
     double delta_m;
@@ -66,13 +65,12 @@ public:
     double Ta[7][9];
     double C[7][7];
     double Vt[7];
-    double Wt[7];
+    double Wv[7]; //вектор силы моментов, вызванных внешними возмущениями
     double J[4];
     double kd;
-    double h;
-    double hx;
-    double hy;
-    double hz;
+    double hx;   //metacentricheskaya vysota
+    double hy;   //metacentricheskaya vysota
+    double hz;   //metacentricheskaya vysota
     double Td;
     double depth_limit;
     double max_depth;

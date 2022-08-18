@@ -1,5 +1,6 @@
 #include "rov_model.h"
 #include <cmath>
+#include <iostream>
 
 
 ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
@@ -31,8 +32,8 @@ ROV_Model::ROV_Model(QObject *parent) : QObject(parent) {
     kd = 3; //koefficient usilenija dvizhitelei
     Td = 0.15; //postojannaya vremeni dvizhitelei
     //koordinaty uporov dvizhitelei otnositelno centra mass apparata
-    depth_limit=100;
-    max_depth=100;
+    depth_limit=50;
+    max_depth=50;
 }
 
 void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const float Uznl, const float Upvp, const float Upvl, const float Uzvl, const float Uzvp) {
@@ -116,11 +117,13 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
 
     //obnulenie verticalnoi polozhitelnoi skorosti apparata pri dostizhenii poverhnosti
     limit1 = limit2 = 0;
+    std::cout << limit1 << limit2 <<std::endl;
     if (a[17] >= max_depth) {
       a[17] = max_depth;
         if (a[3] <= 0) {
           a[3] = 0;
           limit1 = 1;
+          std::cout << limit1 <<std::endl;
       }
     };
 
@@ -132,29 +135,30 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
       {
           a[3] = 0;
           limit2 = 1;
+          std::cout << limit2 <<std::endl;
       }
     };
 
     Fdx = Ppnp_x + Ppnl_x + Pznp_x + Pznl_x + Ppvp_x + Ppvl_x + Pzvl_x + Pzvp_x; // вектор сил и моментов, создаваемых движительным комплексом
     Fgx = -cv1[1] * a[1] * fabs(a[1]) - cv2[1] * a[1]; //произведение D1*Vx
-    FloatageX = -sin(a[5]) * (G - Farx[1][3]);
-    Fcx = C[1][1]*a[1] + C[1][2]*a[2]+C[1][3]*a[3]+C[1][4]*da[4]+C[1][5]*da[5] + C[1][6]*da[6];
+    FloatageX = -sin(a[5]) * (G - Farx[2]);
+    Fcx = C[1][1]*a[1] + C[1][2]*a[2]+C[1][3]*a[3]+C[1][4]*a[18]+C[1][5]*a[19] + C[1][6]*a[20];
     //FloatageX = 0; //обнуление остаточной плавучести
-    da[1] = (1/(m + lambda[1][1])) * (Fdx - Fgx -Fcx - FloatageX + Vt[1]); //vx'
+    da[1] = (1/(m + lambda[1][1])) * (Fdx - Fgx -Fcx - FloatageX + Wv[1]); //vx'
 
     Fdy = Ppnp_y + Ppnl_y + Pznp_y + Pznl_y + Ppvp_y + Ppvl_y + Pzvl_y + Pzvp_y; // вектор сил и моментов, создаваемых движительным комплексом
     Fgy = -cv1[2] * a[2] * fabs(a[2]) - cv2[2] * a[2]; //произведение D1*Vy
-    FloatageY = cos(a[5]) * sin(a[4]) * (G - Farx[1][3]);
-    Fcy = C[2][1]*a[1] + C[2][2]*a[2]+C[2][3]*a[3]+C[2][4]*da[4]+C[2][5]*da[5] + C[2][6]*da[6];
+    FloatageY = cos(a[5]) * sin(a[4]) * (G - Farx[2]);
+    Fcy = C[2][1]*a[1] + C[2][2]*a[2]+C[2][3]*a[3]+C[2][4]*a[18]+C[2][5]*a[19] + C[2][6]*a[20];
     //FloatageY = 0; //обнуление остаточной плавучести
-    da[2] = (1/(m + lambda[2][2])) * (Fdy - Fgy -Fcy - FloatageY + Vt[2]); //vy'
+    da[2] = (1/(m + lambda[2][2])) * (Fdy - Fgy -Fcy - FloatageY + Wv[2]); //vy'
 
     Fdz = Ppnp_z + Ppnl_z + Pznp_z + Pznl_z + Ppvp_z + Ppvl_z + Pzvl_z + Pzvp_z; // вектор сил и моментов, создаваемых движительным комплексом
     Fgz = -cv1[3] * a[3] * fabs(a[3]) - cv2[3] * a[3]; //произведение D1*Vz
-    FloatageZ = cos(a[4]) * cos(a[5]) * (G - Farx[1][3]);
-    Fcz = C[3][1]*a[1] + C[3][2]*a[2]+C[3][3]*a[3]+C[3][4]*da[4]+C[3][5]*da[5] + C[3][6]*da[6];
+    FloatageZ = cos(a[4]) * cos(a[5]) * (G - Farx[2]);
+    Fcz = C[3][1]*a[1] + C[3][2]*a[2]+C[3][3]*a[3]+C[3][4]*a[18]+C[3][5]*a[19] + C[3][6]*a[20];
     //FloatageZ = 0; //обнуление остаточной плавучести
-    da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ + Vt[3]); //vz'
+    da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ + Wv[3]); //vz'
 // da[4] -> производная угла крена da[5]-> производная угла дифферента da[6]-> производная дкурса,
 //следующие 3 уравнения это Кинематические уравнения для углов Эйлера-Крылова
 //описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz , в вектор
@@ -180,7 +184,6 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
 
 
     double alfa[4][4]; //матрица перевода из связанной СК в глобальную СК
-    a[4] = -a[4];
     alfa[1][1] = cos(a[5])*cos(a[6]);
     alfa[2][1] = sin(a[6])*cos(a[5]);
     alfa[3][1] = -sin(a[5]);
@@ -190,16 +193,14 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     alfa[1][3] = sin(a[6])*sin(a[4])+cos(a[6])*cos(a[4])*sin(a[5]);
     alfa[2][3] = sin(a[5])*sin(a[6])*cos(a[4])-cos(a[6])*sin(a[4]);
     alfa[3][3] = cos(a[5])*cos(a[4]);
-    a[4] = -a[4];
-//кажется тут нужно думать со смещением, вся модель была сделана максимум на 7 движетелей, поэтому a[14] накладывается друг на друга, если что завтра этим займусь
-//P.S. сместила на единичку
-    da[15] = alfa[1][1] * a[1] + alfa[1][2] * a[2] + alfa[1][3] * a[3];
+
+    da[15] = alfa[1][1] * a[1] + alfa[1][2] * a[2] + alfa[1][3] * a[3] + Vt[1];
     //dx_global
 
-    da[16] = alfa[2][1] * a[1] + alfa[2][2] * a[2] + alfa[2][3] * a[3];
+    da[16] = alfa[2][1] * a[1] + alfa[2][2] * a[2] + alfa[2][3] * a[3] + Vt[2];
     //dy_global
 
-    da[17] = alfa[3][1] * a[1] + alfa[3][2] * a[2] + alfa[3][3] * a[3];
+    da[17] = alfa[3][1] * a[1] + alfa[3][2] * a[2] + alfa[3][3] * a[3] + Vt[3];
     //dz_global
 
     //как я поняла нам нужно провращать вектор силы тяжести, у него координата ненулевая только по оси z,
@@ -210,7 +211,7 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     double Faz = cos(a[5])*cos(a[4])*Fa;
 
     Mdx = Mpnp_x + Mpnl_x + Mznp_x + Mznl_x + Mpvp_x + Mpvl_x + Mzvl_x + Mzvp_x;
-    Mgx = 90*(cw1[1] * a[18] * fabs(a[18]) + cw2[1] * a[18]);
+    Mgx = cw1[1] * a[18] * fabs(a[18]) + cw2[1] * a[18];
     Max = -hy*Faz + hz*Fay;
     //Max = 0; //obnulenie momenta ot sily Arhimeda
     Mcx = C[4][1]*a[1] + C[4][2]*a[2]+C[4][3]*a[3]+C[4][4]*a[18]+C[4][5]*a[19] + C[4][6]*a[20];
@@ -239,7 +240,7 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
 
 
 void ROV_Model::resetModel(){
-    for (int i=0;i<ANPA_MOD_CNT;i++) {a[i] = 0.0f; da[i]=0.0f;}
+    for (int i=0;i<ANPA_MOD_CNT;i++) {a[i] = 0.0f; da[i]=0.0f;}   //f на конце означает число с плавающей точкой
 }
 
 void ROV_Model::tick(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
@@ -254,7 +255,7 @@ ROV_Model::~ROV_Model(){
 void ROV_Model::runge(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
                       const float Upvp, const float Upvl, const float Uzvl, const float Uzvp, const float Ttimer, const float dt) {
     const double Kc = 180/M_PI;
-    double a1[23], y[23];
+    double a1[24], y[24];
     int i;
     const double H1 = dt;
     const int n = ANPA_MOD_CNT;
@@ -281,19 +282,18 @@ void ROV_Model::runge(const float Upnp,const float Upnl,const float Uznp,const f
       a[i] = a1[i] + (H1 / 6) * (y[i] + da[i]);
     }
 
-
     //данные в СУ ( с преобразованием координат)
 
     x_global = a[15]; //koordinata apparata v globalnoi SK
     y_global = a[16];  //koordinaty apparata v globalnoi SK (преобразование координат)
-    cur_depth = max_depth - y_global;  //tekush"aya glubina SPA
     z_global = a[17]; //otstojanie ot dna otnositelno repernoi tochki, kotoraja na dne
+    cur_depth = max_depth + z_global;  //tekush"aya glubina SPA
     Wx = a[18] * Kc; //uglovye skorosti SPA v svyazannyh osyah v gradus/sekunda
     Wy = a[19] * Kc;
     Wz = a[20] * Kc;
 
     vx_local = a[1]; vy_local = a[2]; vz_local = a[3];  //lineinye skorosti SPA v svyazannyh osyah
-    vx_global = da[14]; vy_global = da[15]; vz_global = da[16];  // lineinye skorosti SPA v globalnyh osyah
+    vx_global = da[15]; vy_global = da[16]; vz_global = da[17];  // lineinye skorosti SPA v globalnyh osyah
 
     Gamma_g = a[4] * Kc; // ugol krena
     Tetta_g = a[5] * Kc; // ugol differenta
@@ -312,7 +312,6 @@ void ROV_Model::runge(const float Upnp,const float Upnl,const float Uznp,const f
 
     deltaSz = vz_local * Ttimer; //prirash"enie koordinaty Z dlya SVS (v svyazannoi s SPA SK)
     sumZ += deltaSz;
-
 
 }
 
