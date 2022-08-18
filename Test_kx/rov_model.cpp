@@ -204,7 +204,7 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     //dz_global
 
     //как я поняла нам нужно провращать вектор силы тяжести, у него координата ненулевая только по оси z,
-    //поэтому я так понимаю умножать нужно на 3 строку матрицы перехода
+    //поэтому умножать нужно на 3 строку матрицы перехода
     double Fa = G + delta_f;
     double Fax = -sin(a[5])*Fa;
     double Fay = sin(a[4])*cos(a[5])*Fa;
@@ -231,7 +231,6 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     Mcz = C[6][1]*a[1] + C[6][2]*a[2]+C[6][3]*a[3]+C[6][4]*a[18]+C[6][5]*a[19] + C[6][6]*a[20];
     da[20] = (1/(J[3] + lambda[6][6])) * (Mdz - Mcz + Mgz - Maz + Wv[3]);
 
-    //?????????Непонятно зачем их приравнивают?
     da[21] = a[1];
     da[22] = a[2];
     da[23] = a[3];
