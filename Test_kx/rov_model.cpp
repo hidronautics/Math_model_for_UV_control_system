@@ -41,14 +41,18 @@ void ROV_Model::model(const float Upnp,const float Upnl,const float Uznp,const f
     double G,delta_f;
 
     //модули упоров движителей
-    Ppnp = a[7];  // передний нижний правый(1)
-    Ppnl = a[8];  // передний нижний левый(2)
-    Pznp = a[9];  // задний нижний левый(3)
-    Pznl = a[10];  //задний нижний правый(4)
+    Ppnp =X[7][0]=K[7];  // передний нижний правый(1)
+    Ppnl =X[8][0]=K[8];  // передний нижний левый(2)
+    Pznp =X[9][0]=K[9];  // задний нижний левый(3)
+    Pznl = X[10][0]=K[10];  //задний нижний правый(4)
     Ppvp = a[11];  // передний верхний правый(5)
     Ppvl = a[12];  // передний верхний левый(6)
     Pzvl = a[13];  // задний верхний левый(7)
     Pzvp = a[14];  //задний верхний правый(8)
+    X[15][0]=Upnp-Ppnp;
+    X[16][0]=Upnl-Ppnl;
+    X[17][0]=Uznp-Pznp;
+    X[18][0]=Uznl-Pznl;
 
     //проекции упоров движителей на продольную ось апарата X
     Ppnp_x = Ppnp*Ta[1][1];
@@ -244,6 +248,7 @@ void ROV_Model::resetModel(){
 
 void ROV_Model::tick(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
                      const float Upvp, const float Upvl, const float Uzvl, const float Uzvp,const float Ttimer){
+
     runge(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp,Ttimer,Ttimer);
 }
 
