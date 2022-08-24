@@ -2,16 +2,19 @@
 #include <cmath>
 #include <iostream>
 
+
+
 SU_ROV::SU_ROV(QObject *parent) : QObject(parent)
 {
     X_protocol = new x_protocol("kx_pult.conf", "x",X);
     K_protocol = new Qkx_coeffs("kx_pult.conf","k");
 
     X[1][0]=32;
-
+    int static count = 0;
     connect(&timer, &QTimer::timeout,[this](){
         X[2][0]=K[32];
-        this->tick();
+        std::cout << count ++ << std::endl;
+        this->tick(7,10,8,7,0,0,0,0,0.01);
     });
     timer.start(1000);
 
@@ -19,7 +22,7 @@ SU_ROV::SU_ROV(QObject *parent) : QObject(parent)
     //k_gamma = 0.3;    не использую в итоге
     m = 100;
     //delta_m = 2;
-    cv1[1] = 109; cv1[2] = 950; cv1[3] = 633;
+    X[3][0] = cv1[1] = 109; cv1[2] = 950; cv1[3] = 633;
     cv2[1] = 10.9; cv2[2] = 114; cv2[3] = 76;
     cw1[1] = 228.6; cw1[2] = 366; cw1[3] = 366; // kak v rabote Egorova
     cw2[1] = 2.29; cw2[2] = 36.6; cw2[3] = 36.6;
@@ -128,13 +131,11 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
 
     //obnulenie verticalnoi polozhitelnoi skorosti apparata pri dostizhenii poverhnosti
     limit1 = limit2 = 0;
-    std::cout << limit1 << limit2 <<std::endl;
     if (a[17] >= max_depth) {
       a[17] = max_depth;
         if (a[3] <= 0) {
           a[3] = 0;
           limit1 = 1;
-          std::cout << limit1 <<std::endl;
       }
     };
 
@@ -146,7 +147,6 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
       {
           a[3] = 0;
           limit2 = 1;
-          std::cout << limit2 <<std::endl;
       }
     };
 
@@ -255,6 +255,13 @@ void SU_ROV::resetModel(){
 void SU_ROV::tick(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
                      const float Upvp, const float Upvl, const float Uzvl, const float Uzvp,const float Ttimer){
 
+    X[4][0] = a[4] = K[4];
+    X[5][0] = K[5];
+    X[6][0] = K[6];
+    X[19][0] = K[19];
+    X[20][0] = K[20];
+    X[21][0] = K[21];
+    X[10][0] = X[19][0] + (1/cos(X[5][0]) * ((X[20][0]) * sin(X[4][0]) * sin(X[5][0])  + sin(X[5][0]) * cos(X[4][0]) * X[21][0]));
     runge(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp,Ttimer,Ttimer);
 }
 
@@ -282,11 +289,13 @@ void SU_ROV::runge(const float Upnp,const float Upnl,const float Uznp,const floa
       y[i] = y[i]+ 2 * da[i];
       a[i] = a1[i] + 0.5 * H1 * da[i];
     }
+
     model(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp);
     for (i = 1; i < n; i++) {
       y[i] = y[i] + 2 * da[i];
       a[i] = a1[i] + H1 * da[i];
     }
+
     model(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp);
     for (i = 1; i < n; i++) {
       a[i] = a1[i] + (H1 / 6) * (y[i] + da[i]);

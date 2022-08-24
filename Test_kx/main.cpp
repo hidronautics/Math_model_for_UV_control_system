@@ -6,7 +6,6 @@ double X[2000][2];
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
-    SU_ROV su;
-    su.tick(7,10,8,7,0,0,0,0,0.1);
+    SU_ROV rov_Model;
     return a.exec();
 }
