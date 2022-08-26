@@ -13,10 +13,9 @@ extern double X[2000][2];
 extern QVector<double> K;
 
 struct InitData {
-    double k_gamma;
     double m;
+    double Fa;
     double Farx[3];
-    double delta_m;
     double cv1[4];
     double cv2[4];
     double cw1[4];
@@ -25,9 +24,7 @@ struct InitData {
     double Ta[6][8];
     double J[3];
     double kd;
-    double hx;  //metacentricheskaya vysota
-    double hy;  //metacentricheskaya vysota
-    double hz;  //metacentricheskaya vysota
+    double h[4]; //радиус-вектор координат центра водоизмещения НПА в связанной СК, [1]-x [2]-y [3]-z
     double Td;
     double depth_limit;
     double max_depth;
@@ -52,14 +49,12 @@ public:
 
     double a[ANPA_MOD_CNT];
     double da[ANPA_MOD_CNT];
-    double delta_f;
     //константы
-    double k_gamma;
     double m;
+    double Fa;
     double Farx[3];
     double g;
     double G;
-    double delta_m;
     double cv1[4];
     double cv2[4];
     double cw1[4];
@@ -71,9 +66,7 @@ public:
     double Wv[7]; //вектор силы моментов, вызванных внешними возмущениями
     double J[4];
     double kd;
-    double hx;   //metacentricheskaya vysota
-    double hy;   //metacentricheskaya vysota
-    double hz;   //metacentricheskaya vysota
+    double h[4]; //радиус-вектор координат центра водоизмещения НПА в связанной СК [1]-x [2]-y [3]-z
     double Td;
     double depth_limit;
     double max_depth;

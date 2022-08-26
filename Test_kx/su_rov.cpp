@@ -14,27 +14,27 @@ SU_ROV::SU_ROV(QObject *parent) : QObject(parent)
     connect(&timer, &QTimer::timeout,[this](){
         X[2][0]=K[32];
         std::cout << count ++ << std::endl;
-        this->tick(7,10,8,7,0,0,0,0,0.01);
+        this->tick(25,23,24,22,23,24,22,23,0.01);
     });
-    timer.start(1000);
-
     resetModel();
-    //k_gamma = 0.3;    не использую в итоге
-    m = 100;
-    //delta_m = 2;
-    X[3][0] = cv1[1] = 109; cv1[2] = 950; cv1[3] = 633;
+    timer.start(100);
+
+    m = 20;
+    cv1[1] = 10.9; cv1[2] = 95.0; cv1[3] = 63.3;
     cv2[1] = 10.9; cv2[2] = 114; cv2[3] = 76;
     cw1[1] = 228.6; cw1[2] = 366; cw1[3] = 366; // kak v rabote Egorova
     cw2[1] = 2.29; cw2[2] = 36.6; cw2[3] = 36.6;
-    Vt[1] = 1;Vt[2] = 1; Vt[3] = 1; Vt[4] = 0; Vt[5] = 0; Vt[6] = 0; // скорость течения
+    //Vt[1] = 1; Vt[2] = 1; Vt[3] = 1; Vt[4] = 0; Vt[5] = 0; Vt[6] = 0; // скорость течения
+    //Wv[1] = 0; Wv[2] = 0; Wv[3] = 0; Wv[4] = 0; Wv[5] = 0; Wv[6] = 0; //внешние возмущения, лин. скорости([1]-[3], угловые скорости - [4]-[6])
+    //h[1]= ; h[2]= ; h[3]= ; // радиус-вектор координат центра водоизмещения
     lambda[1][1] = 50; lambda[2][2] = 101; lambda[3][3] = 101;
     lambda[4][4] = 50; lambda[5][5] = 50; lambda[6][6] = 50;
-    Ta[1][1] = 0.7071; Ta[1][2] = 0.7071; Ta[1][3] = -0.7071; Ta[1][4] = -0.7071; Ta[1][5] = 0.7071; Ta[1][6] = 0.7071; Ta[1][7] = -0.7071; Ta[1][8] = -0.7071;
-    Ta[2][1] = -0.7071; Ta[2][2] = 0.7071; Ta[2][3] = 0.7071; Ta[2][4] = -0.7071; Ta[2][5] = -0.7071; Ta[2][6] = 0.7071; Ta[2][7] = 0.7071; Ta[2][8] = -0.7071;
-    Ta[3][1] = 0.7071; Ta[3][2] = 0.7071; Ta[3][3] = 0.7071; Ta[3][4] = 0.7071; Ta[3][5] = -0.7071; Ta[3][6] = -0.7071; Ta[3][7] = -0.7071; Ta[3][8] = -0.7071;
-    Ta[4][1] = 117.5; Ta[4][2] = -117.5; Ta[4][3] = -117.5; Ta[4][4] = 117.5; Ta[4][5] = -117.5; Ta[4][6] = 117.5; Ta[4][7] = 117.5; Ta[4][8] = -117.5;
-    Ta[5][1] = -3.83; Ta[5][2] = -3.83; Ta[5][3] = 3.83; Ta[5][4] = 3.83; Ta[5][5] = 3.83; Ta[5][6] = 3.83; Ta[5][7] = -3.83; Ta[5][8] = -3.83;
-    Ta[6][1] = -121.33; Ta[6][2] = 121.33; Ta[6][3] = -121.33; Ta[6][4] = 121.33; Ta[6][5] = -121.33; Ta[6][6] = 121.33; Ta[6][7] = -121.33; Ta[6][8] = 121.33;
+    Ta[1][1] = 0.6124; Ta[1][2] = 0.6124; Ta[1][3] = -0.6124; Ta[1][4] = -0.6124; Ta[1][5] = 0.6124; Ta[1][6] = 0.6124; Ta[1][7] = -0.6124; Ta[1][8] = -0.6124;
+    Ta[2][1] = -0.5; Ta[2][2] = 0.5; Ta[2][3] = 0.5; Ta[2][4] = -0.5; Ta[2][5] = -0.5; Ta[2][6] = 0.5; Ta[2][7] = 0.5; Ta[2][8] = -0.5;
+    Ta[3][1] = 0.3536; Ta[3][2] = 0.3536; Ta[3][3] = 0.3536; Ta[3][4] = 0.3536; Ta[3][5] = -0.3536; Ta[3][6] = -0.3536; Ta[3][7] = -0.3536; Ta[3][8] = -0.3536;
+    Ta[4][1] = 70.1448; Ta[4][2] = -70.1448; Ta[4][3] = -70.1448; Ta[4][4] = 70.1448; Ta[4][5] = -70.1448; Ta[4][6] = 70.1448; Ta[4][7] = 70.1448; Ta[4][8] = -70.1448;
+    Ta[5][1] = 20.2244; Ta[5][2] = 20.2244; Ta[5][3] = -20.2244; Ta[5][4] = -20.2244; Ta[5][5] = -20.2244; Ta[5][6] = -20.2244; Ta[5][7] = 20.2244; Ta[5][8] = 20.2244;
+    Ta[6][1] = -92.8926; Ta[6][2] = 92.8926; Ta[6][3] = -92.8926; Ta[6][4] = 92.8926; Ta[6][5] = -92.8926; Ta[6][6] = 92.8926; Ta[6][7] = -92.8926; Ta[6][8] = 92.8926;
     //матрица сил и моментов инерции (проверить вторую матрицу, пока я вбила из мат модели, но кажется там я ошиблась она же не симметрична относительно оси, что странно)
     C[1][1] = 0; C[1][2] = (m+lambda[2][2])*a[20]; C[1][3] = -(m + lambda[3][3])*a[19]; C[1][4] = 0; C[1][5] = 0; C[1][6] = 0;
     C[2][1] = -(m + lambda[1][1])*a[20]; C[2][2] = 0; C[2][3] = (m + lambda[3][3])*a[18]; C[2][4] = 0; C[2][5] = 0; C[2][6] = 0;
@@ -43,16 +43,15 @@ SU_ROV::SU_ROV(QObject *parent) : QObject(parent)
     C[5][1] = 0; C[5][2] = 0; C[5][3] = 0; C[5][4] = (J[3]+lambda[6][6])*a[20]; C[5][5] = 0; C[5][6] = -(J[1]+lambda[4][4])*a[18];
     C[6][1] = 0; C[6][2] = 0; C[6][3] = 0; C[6][4] = -(J[2]+lambda[5][5])*a[19]; C[6][5] = (J[1]+lambda[4][4])*a[18]; C[6][6] = 0;
     J[1] = 4; J[2] = 19.8; J[3] = 19.8; //moment inercii apparata vdol sootvetstvuushih osei
-    kd = 3; //koefficient usilenija dvizhitelei
+    kd = 2; //koefficient usilenija dvizhitelei
     Td = 0.15; //postojannaya vremeni dvizhitelei
-    //koordinaty uporov dvizhitelei otnositelno centra mass apparata
     depth_limit=50;
     max_depth=50;
 }
 
 void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const float Uznl, const float Upvp, const float Upvl, const float Uzvl, const float Uzvp) {
     int limit1, limit2;
-    double G,delta_f;
+    double G;
 
     //модули упоров движителей
     Ppnp = a[7];  // передний нижний правый(1)
@@ -126,8 +125,8 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
 
     double g = 9.81;
     G = m*g; //вес аппарата
-    delta_f = delta_m * g; //плавучесть (H)
-    Farx[0] = 0; Farx[1] = 0; Farx[2] = -10; //коэффициент 10 написан по приколу
+    Fa = 200;
+    Farx[0] = 0; Farx[1] = 0; Farx[2] = -Fa;
 
     //obnulenie verticalnoi polozhitelnoi skorosti apparata pri dostizhenii poverhnosti
     limit1 = limit2 = 0;
@@ -152,24 +151,25 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
 
     Fdx = Ppnp_x + Ppnl_x + Pznp_x + Pznl_x + Ppvp_x + Ppvl_x + Pzvl_x + Pzvp_x; // вектор сил и моментов, создаваемых движительным комплексом
     Fgx = -cv1[1] * a[1] * fabs(a[1]) - cv2[1] * a[1]; //произведение D1*Vx
-    FloatageX = -sin(a[5]) * (G - Farx[2]);
+    FloatageX = -sin(a[5]) * (G + Farx[2]);
     Fcx = C[1][1]*a[1] + C[1][2]*a[2]+C[1][3]*a[3]+C[1][4]*a[18]+C[1][5]*a[19] + C[1][6]*a[20];
-    //FloatageX = 0; //обнуление остаточной плавучести
-    da[1] = (1/(m + lambda[1][1])) * (Fdx - Fgx -Fcx - FloatageX + Wv[1]); //vx'
+    //FloatageX = 0; //обнуление плавучести
+    da[1] = (1/(m + lambda[1][1])) * (Fdx + Fgx + Fcx + FloatageX + Wv[1]); //vx'
 
     Fdy = Ppnp_y + Ppnl_y + Pznp_y + Pznl_y + Ppvp_y + Ppvl_y + Pzvl_y + Pzvp_y; // вектор сил и моментов, создаваемых движительным комплексом
     Fgy = -cv1[2] * a[2] * fabs(a[2]) - cv2[2] * a[2]; //произведение D1*Vy
-    FloatageY = cos(a[5]) * sin(a[4]) * (G - Farx[2]);
+    FloatageY = cos(a[5]) * sin(a[4]) * (G + Farx[2]);
     Fcy = C[2][1]*a[1] + C[2][2]*a[2]+C[2][3]*a[3]+C[2][4]*a[18]+C[2][5]*a[19] + C[2][6]*a[20];
-    //FloatageY = 0; //обнуление остаточной плавучести
-    da[2] = (1/(m + lambda[2][2])) * (Fdy - Fgy -Fcy - FloatageY + Wv[2]); //vy'
+    //FloatageY = 0; //обнуление плавучести
+    da[2] = (1/(m + lambda[2][2])) * (Fdy + Fgy + Fcy + FloatageY + Wv[2]); //vy'
 
     Fdz = Ppnp_z + Ppnl_z + Pznp_z + Pznl_z + Ppvp_z + Ppvl_z + Pzvl_z + Pzvp_z; // вектор сил и моментов, создаваемых движительным комплексом
     Fgz = -cv1[3] * a[3] * fabs(a[3]) - cv2[3] * a[3]; //произведение D1*Vz
-    FloatageZ = cos(a[4]) * cos(a[5]) * (G - Farx[2]);
+    FloatageZ = cos(a[4]) * cos(a[5]) * (G + Farx[2]);
     Fcz = C[3][1]*a[1] + C[3][2]*a[2]+C[3][3]*a[3]+C[3][4]*a[18]+C[3][5]*a[19] + C[3][6]*a[20];
-    //FloatageZ = 0; //обнуление остаточной плавучести
-    da[3] = (1/(m + lambda[3][3])) * (Fdz - Fgz -Fcz - FloatageZ + Wv[3]); //vz'
+    //FloatageZ = 0; //обнуление плавучести
+    da[3] = (1/(m + lambda[3][3])) * (Fdz + Fgz + Fcz + FloatageZ + Wv[3]); //vz'
+
 // da[4] -> производная угла крена da[5]-> производная угла дифферента da[6]-> производная дкурса,
 //следующие 3 уравнения это Кинематические уравнения для углов Эйлера-Крылова
 //описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz , в вектор
@@ -216,31 +216,36 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
 
     //как я поняла нам нужно провращать вектор силы тяжести, у него координата ненулевая только по оси z,
     //поэтому умножать нужно на 3 строку матрицы перехода
-    double Fa = G + delta_f;
     double Fax = -sin(a[5])*Fa;
     double Fay = sin(a[4])*cos(a[5])*Fa;
     double Faz = cos(a[5])*cos(a[4])*Fa;
 
     Mdx = Mpnp_x + Mpnl_x + Mznp_x + Mznl_x + Mpvp_x + Mpvl_x + Mzvl_x + Mzvp_x;
-    Mgx = cw1[1] * a[18] * fabs(a[18]) + cw2[1] * a[18];
-    Max = -hy*Faz + hz*Fay;
+    Mgx = -cw1[1] * a[18] * fabs(a[18]) - cw2[1] * a[18];
+    Max = -h[2]*Faz + h[3]*Fay;
     //Max = 0; //obnulenie momenta ot sily Arhimeda
     Mcx = C[4][1]*a[1] + C[4][2]*a[2]+C[4][3]*a[3]+C[4][4]*a[18]+C[4][5]*a[19] + C[4][6]*a[20];
-    da[18] = (1/(J[1] + lambda[4][4])) * (Mdx - Mcx+ Mgx - Max + Wv[1]);
+    da[18] = (1/(J[1] + lambda[4][4])) * (Mdx + Mcx + Mgx + Max + Wv[4]);
+    X[30][0]=Mdx;
+    X[31][0]=Mgx;
+    X[32][0]=Max;
+    X[33][0]=Wv[4];
+
 
     Mdy = Mpnp_y + Mpnl_y + Mznp_y + Mznl_y + Mpvp_y + Mpvl_y + Mzvl_y + Mzvp_y;
-    Mgy = cw1[2] * a[19] * fabs(a[19]) + cw2[2] * a[19];
-    May = -Faz*hy + Fay*hz;
+    Mgy = -cw1[2] * a[19] * fabs(a[19]) - cw2[2] * a[19];
+    May = -Faz*h[1] + Fax*h[3];
     //May = 0; //obnulenie momenta ot sily Arhimeda
     Mcy = C[5][1]*a[1] + C[5][2]*a[2]+C[5][3]*a[3]+C[5][4]*a[18]+C[5][5]*a[19] + C[5][6]*a[20];
-    da[19] = (1/(J[2] + lambda[5][5])) * (Mdy - Mcy + Mgy - May + Wv[2]);
+    da[19] = (1/(J[2] + lambda[5][5])) * (Mdy + Mcy + Mgy + May + Wv[5]);
 
     Mdz = Mpnp_z + Mpnl_z + Mznp_z + Mznl_z + Mpvp_z + Mpvl_z + Mzvl_z + Mzvp_z;
-    Mgz = cw1[3] * a[20] * fabs(a[20]) + cw2[3] * a[20];
-    Maz = -hx*Fay + hy*Fax;
+    Mgz = -cw1[3] * a[20] * fabs(a[20]) - cw2[3] * a[20];
+    Maz = -h[1]*Fay + h[2]*Fax;
     //Maz = 0; //obnulenie momenta ot sily Arhimeda
     Mcz = C[6][1]*a[1] + C[6][2]*a[2]+C[6][3]*a[3]+C[6][4]*a[18]+C[6][5]*a[19] + C[6][6]*a[20];
-    da[20] = (1/(J[3] + lambda[6][6])) * (Mdz - Mcz + Mgz - Maz + Wv[3]);
+    da[20] = (1/(J[3] + lambda[6][6])) * (Mdz + Mcz + Mgz + Maz + Wv[6]);
+
 
     da[21] = a[1];
     da[22] = a[2];
@@ -250,18 +255,16 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
 
 void SU_ROV::resetModel(){
     for (int i=0;i<ANPA_MOD_CNT;i++) {a[i] = 0.0f; da[i]=0.0f;}   //f на конце означает число с плавающей точкой
+    for (int i=0; i<7;i++){
+        Wv[i]=0;
+        Vt[i]=0;
+        h[i]=0;   //потом исправить на реальное значение сверху
+    }
 }
 
 void SU_ROV::tick(const float Upnp,const float Upnl,const float Uznp,const float Uznl,
                      const float Upvp, const float Upvl, const float Uzvl, const float Uzvp,const float Ttimer){
 
-    X[4][0] = a[4] = K[4];
-    X[5][0] = K[5];
-    X[6][0] = K[6];
-    X[19][0] = K[19];
-    X[20][0] = K[20];
-    X[21][0] = K[21];
-    X[10][0] = X[19][0] + (1/cos(X[5][0]) * ((X[20][0]) * sin(X[4][0]) * sin(X[5][0])  + sin(X[5][0]) * cos(X[4][0]) * X[21][0]));
     runge(Upnp, Upnl, Uznp, Uznl, Upvp, Upvl, Uzvl, Uzvp,Ttimer,Ttimer);
 }
 
@@ -318,9 +321,9 @@ void SU_ROV::runge(const float Upnp,const float Upnl,const float Uznp,const floa
     Tetta_g = a[5] * Kc; // ugol differenta
     Psi_g = a[6] * Kc; // ugol kursa (преобразование координат)
 
-    W_Psi_g = da[4] * Kc; // proizvodnaya ugla kursa
-    W_Gamma_g = da[5] * Kc; // proizvodnaya ugla krena
-    W_Tetta_g = da[6] * Kc; // proizvodnaya ugla differenta
+    W_Gamma_g = da[4] * Kc; // proizvodnaya ugla krena
+    W_Tetta_g = da[5] * Kc; // proizvodnaya ugla differenta
+    W_Psi_g = da[6] * Kc; // proizvodnaya ugla kursa
 
     N = fabs(Psi_g / 360);
     if (Psi_g >= 360) Psi_gi = Psi_g - N * 360; // ugol kursa na indikaciu
@@ -332,5 +335,30 @@ void SU_ROV::runge(const float Upnp,const float Upnl,const float Uznp,const floa
     deltaSz = vz_local * Ttimer; //prirash"enie koordinaty Z dlya SVS (v svyazannoi s SPA SK)
     sumZ += deltaSz;
 
+
+    X[10][0]=Wx;
+    X[11][0]=Wy;
+    X[12][0]=Wz;
+
+    X[13][0]=vx_local;
+    X[14][0]=vy_local;
+    X[15][0]=vz_local;
+
+    X[16][0]=W_Gamma_g;
+    X[17][0]=W_Tetta_g;
+    X[18][0]=W_Psi_g;
+
+    X[19][0]=x_global;
+    X[20][0]=y_global;
+    X[21][0]=z_global;
+
+    X[22][0]=Ppnp;
+    X[23][0]=Ppnl;
+    X[24][0]=Pznp;
+    X[25][0]=Pznl;
+    X[26][0]=Ppvp;
+    X[27][0]=Ppvl;
+    X[28][0]=Pzvl;
+    X[29][0]=Pzvp;
 }
 
