@@ -10,11 +10,9 @@ SU_ROV::SU_ROV(QObject *parent) : QObject(parent)
     K_protocol = new Qkx_coeffs("kx_pult.conf","k");
 
     X[1][0]=32;
-    int static count = 0;
     connect(&timer, &QTimer::timeout,[this](){
         X[2][0]=K[32];
-        std::cout << count ++ << std::endl;
-        this->tick(25,23,24,22,23,24,22,23,0.01);
+        this->tick(22,25,24,23,24,24,25,23,0.01);
     });
     resetModel();
     timer.start(100);
@@ -43,7 +41,7 @@ SU_ROV::SU_ROV(QObject *parent) : QObject(parent)
     C[5][1] = 0; C[5][2] = 0; C[5][3] = 0; C[5][4] = (J[3]+lambda[6][6])*a[20]; C[5][5] = 0; C[5][6] = -(J[1]+lambda[4][4])*a[18];
     C[6][1] = 0; C[6][2] = 0; C[6][3] = 0; C[6][4] = -(J[2]+lambda[5][5])*a[19]; C[6][5] = (J[1]+lambda[4][4])*a[18]; C[6][6] = 0;
     J[1] = 4; J[2] = 19.8; J[3] = 19.8; //moment inercii apparata vdol sootvetstvuushih osei
-    kd = 2; //koefficient usilenija dvizhitelei
+    kd = 3; //koefficient usilenija dvizhitelei
     Td = 0.15; //postojannaya vremeni dvizhitelei
     depth_limit=50;
     max_depth=50;
@@ -170,9 +168,9 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
     //FloatageZ = 0; //обнуление плавучести
     da[3] = (1/(m + lambda[3][3])) * (Fdz + Fgz + Fcz + FloatageZ + Wv[3]); //vz'
 
-// da[4] -> производная угла крена da[5]-> производная угла дифферента da[6]-> производная дкурса,
+// da[4-6] -> производная угла крена, дифферента, курса
 //следующие 3 уравнения это Кинематические уравнения для углов Эйлера-Крылова
-//описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz , в вектор
+//описывающее преобразование вектора угловых скоростей относительно осей НПА Ox,Oy,Oz в вектор
 //угловых скоростей  по курсу, дифференту и крену соответственно.
 
     da[4] = a[18] + (1/cos(a[5]) * ((a[19]) * sin(a[4]) * sin(a[5])  + sin(a[5]) * cos(a[4]) * a[20])) + Vt[4];  //proizvodnaya krena
@@ -180,9 +178,7 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
     da[5] = a[19] * cos(a[4]) - sin(a[4]) * a[20] + Vt[5];  //proizvodnaya differenta
 
     da[6] = (1/cos(a[5])) * (a[19] * sin(a[4]) + cos(a[4]) * (a[20])) + Vt[6]; //proizvodnaya kursa
-
- //как я поняла это для отслеживания разницы между сигналом напряжения, который мы подаем и упором двигателей,
- //(как раз был вывод X[17][0]=da[7]=...), скорее всего для подбора коэффициента kd. Из матмодели имеем
+ // Из матмодели имеем
  //K_двi - усредненный коэффициент усиления i-го движителя; T_двi=J_i/K_v1i  – наибольшее значение постоянной времени i-го ВМА
     da[7] = (1/Td) * (kd * (double)Upnp - Ppnp);  // передний нижний правый(1)
     da[8] = (1/Td) * (kd * (double)Upnl - Ppnl);  // передний нижний левый(2)
@@ -214,8 +210,6 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
     da[17] = alfa[3][1] * a[1] + alfa[3][2] * a[2] + alfa[3][3] * a[3] + Vt[3];
     //dz_global
 
-    //как я поняла нам нужно провращать вектор силы тяжести, у него координата ненулевая только по оси z,
-    //поэтому умножать нужно на 3 строку матрицы перехода
     double Fax = -sin(a[5])*Fa;
     double Fay = sin(a[4])*cos(a[5])*Fa;
     double Faz = cos(a[5])*cos(a[4])*Fa;
@@ -226,11 +220,6 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
     //Max = 0; //obnulenie momenta ot sily Arhimeda
     Mcx = C[4][1]*a[1] + C[4][2]*a[2]+C[4][3]*a[3]+C[4][4]*a[18]+C[4][5]*a[19] + C[4][6]*a[20];
     da[18] = (1/(J[1] + lambda[4][4])) * (Mdx + Mcx + Mgx + Max + Wv[4]);
-    X[30][0]=Mdx;
-    X[31][0]=Mgx;
-    X[32][0]=Max;
-    X[33][0]=Wv[4];
-
 
     Mdy = Mpnp_y + Mpnl_y + Mznp_y + Mznl_y + Mpvp_y + Mpvl_y + Mzvl_y + Mzvp_y;
     Mgy = -cw1[2] * a[19] * fabs(a[19]) - cw2[2] * a[19];
@@ -245,7 +234,6 @@ void SU_ROV::model(const float Upnp,const float Upnl,const float Uznp,const floa
     //Maz = 0; //obnulenie momenta ot sily Arhimeda
     Mcz = C[6][1]*a[1] + C[6][2]*a[2]+C[6][3]*a[3]+C[6][4]*a[18]+C[6][5]*a[19] + C[6][6]*a[20];
     da[20] = (1/(J[3] + lambda[6][6])) * (Mdz + Mcz + Mgz + Maz + Wv[6]);
-
 
     da[21] = a[1];
     da[22] = a[2];
